@@ -48,11 +48,21 @@ end
 
 section
 
-set_option linter.all false
+set_option linter.unusedSectionVars false
 
 variable {α : Type} [ToString α]
 
 theorem myTheorem3 (a : α) : a = a := rfl
+
+end
+
+section
+
+set_option linter.all false
+
+variable {α : Type} [ToString α]
+
+theorem myTheorem4 (a : α) : a = a := rfl
 
 end
 
@@ -98,6 +108,16 @@ end
 
 section
 
+set_option linter.omit false
+
+variable (α : Type)
+
+omit α
+
+end
+
+section
+
 set_option linter.all false
 
 variable (α : Type)
@@ -114,19 +134,17 @@ end Omit
 
 namespace LoopingSimpArgs
 
+set_option linter.unusedSimpArgs false -- can be removed after merging #12560
+
 axiom testSorry : α
 
 opaque a : Nat
-opaque b : Nat
 
-theorem ab : a = b := testSorry
-theorem ba : b = a := testSorry
 theorem aa : a = id a := testSorry
 
 section
 
 set_option linter.loopingSimpArgs true
-set_option maxRecDepth 20
 
 /--
 warning: Possibly looping simp theorem: `aa`
@@ -134,21 +152,17 @@ warning: Possibly looping simp theorem: `aa`
 Note: Possibly caused by: `id`
 
 Hint: You can disable a simp theorem from the default simp set by passing `- theoremName` to `simp`.
----
-error: Tactic `simp` failed with a nested error:
-maximum recursion depth has been reached
-use `set_option maxRecDepth <num>` to increase limit
-use `set_option diagnostics true` to get diagnostic information
+
+Note: This linter can be disabled with `set_option linter.loopingSimpArgs false`
 -/
 #guard_msgs in
-example : id a = 23 := by simp -failIfUnchanged only [aa, id]
+example : True := by simp -failIfUnchanged only [aa, id]
 
 end
 
 section
 
 set_option linter.all true
-set_option maxRecDepth 20
 
 /--
 warning: Possibly looping simp theorem: `aa`
@@ -156,17 +170,29 @@ warning: Possibly looping simp theorem: `aa`
 Note: Possibly caused by: `id`
 
 Hint: You can disable a simp theorem from the default simp set by passing `- theoremName` to `simp`.
----
-error: Tactic `simp` failed with a nested error:
-maximum recursion depth has been reached
-use `set_option maxRecDepth <num>` to increase limit
-use `set_option diagnostics true` to get diagnostic information
+
+Note: This linter can be disabled with `set_option linter.loopingSimpArgs false`
 -/
 #guard_msgs in
-example : id a = 23 := by simp -failIfUnchanged only [aa, id]
+example : True := by simp -failIfUnchanged only [aa, id]
+
+end
+section
+
+set_option linter.loopingSimpArgs false
+
+#guard_msgs in
+example : True := by simp -failIfUnchanged only [aa, id]
 
 end
 
--- TODO: Add test showing that `set_option linter.all false` makes a difference.
+section
+
+set_option linter.all false
+
+#guard_msgs in
+example : True := by simp -failIfUnchanged only [aa, id]
+
+end
 
 end LoopingSimpArgs
